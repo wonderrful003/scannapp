@@ -66,6 +66,7 @@ GOOGLE_SERVICE_ACCOUNT_FILE = os.getenv(
 # ── OCR config ────────────────────────────────────────────────────────────────
 # On Linux/Ubuntu: sudo apt install tesseract-ocr
 # On Windows: set this to your tesseract.exe path
-TESSERACT_CMD = os.getenv('TESSERACT_CMD', '/usr/bin/tesseract')
+import shutil
+TESSERACT_CMD = os.getenv('TESSERACT_CMD') or shutil.which('tesseract') or '/usr/bin/tesseract'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
