@@ -1,149 +1,117 @@
 import re
-import numpy as np
-import cv2
-import pytesseract
+import base64
+import requests
+import os
 from PIL import Image
-from django.conf import settings
-import shutil
+import io
 
-# Find tesseract automatically
-cmd = getattr(settings, 'TESSERACT_CMD', None) or shutil.which('tesseract') or '/usr/bin/tesseract'
-pytesseract.pytesseract.tesseract_cmd = cmd
+VISION_KEY = os.getenv('VISION_API_KEY', '')
+VISION_URL = 'https://vision.googleapis.com/v1/images:annotate'
 
 
 def extract_code(image_file) -> dict:
+    """
+    Send image to Google Cloud Vision API and extract serial number.
+    Much more accurate than Tesseract for real-world photos.
+    """
     try:
-        pil_img = Image.open(image_file).convert('RGB')
-        img     = np.array(pil_img)
-        img     = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        # Read and encode image to base64
+        img_bytes = image_file.read()
 
-        candidates = []
+        # Resize if too large — Vision API has a 10MB limit
+        pil_img = Image.open(io.BytesIO(img_bytes)).convert('RGB')
 
-        # Pass 1 — original image, no processing at all
-        text = _run_tesseract_pil(pil_img)
-        code = _pick_best_code(text)
-        if code:
-            candidates.append((code, text))
+        # Resize to max 1600px wide for faster processing
+        max_w = 1600
+        if pil_img.width > max_w:
+            ratio  = max_w / pil_img.width
+            new_h  = int(pil_img.height * ratio)
+            pil_img = pil_img.resize((max_w, new_h), Image.LANCZOS)
 
-        # Pass 2 — greyscale only, no binarising
-        grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        text = _run_tesseract_cv(grey)
-        code = _pick_best_code(text)
-        if code:
-            candidates.append((code, text))
+        # Convert back to bytes
+        buffer = io.BytesIO()
+        pil_img.save(buffer, format='JPEG', quality=90)
+        img_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
 
-        # Pass 3 — crop bottom 50%, upscale 2x, greyscale
-        h = img.shape[0]
-        cropped = img[int(h * 0.50):, :]
-        grey2   = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
-        large   = cv2.resize(grey2, None, fx=2, fy=2,
-                             interpolation=cv2.INTER_CUBIC)
-        text = _run_tesseract_cv(large)
-        code = _pick_best_code(text)
-        if code:
-            candidates.append((code, text))
-
-        # Pass 4 — CLAHE contrast enhancement
-        grey3 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-        enhanced = clahe.apply(grey3)
-        text = _run_tesseract_cv(enhanced)
-        code = _pick_best_code(text)
-        if code:
-            candidates.append((code, text))
-
-        # Pass 5 — adaptive threshold (gentler than hard binarise)
-        grey4   = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(grey4, (3, 3), 0)
-        thresh  = cv2.adaptiveThreshold(
-            blurred, 255,
-            cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-            cv2.THRESH_BINARY,
-            blockSize=15, C=4
-        )
-        text = _run_tesseract_cv(thresh)
-        code = _pick_best_code(text)
-        if code:
-            candidates.append((code, text))
-
-        if not candidates:
-            # Last resort — return ALL raw text so user can see what
-            # Tesseract actually read and edit it manually
-            raw = _run_tesseract_pil(pil_img)
-            return {
-                'success': True,
-                'code'   : raw.strip()[:50],
-                'raw'    : raw,
-            }
-
-        best_code, raw_text = max(candidates, key=lambda r: _score(r[0]))
-        return {
-            'success': True,
-            'code'   : best_code,
-            'raw'    : raw_text,
+        # Call Vision API
+        payload = {
+            'requests': [{
+                'image'   : {'content': img_b64},
+                'features': [
+                    {'type': 'TEXT_DETECTION',          'maxResults': 50},
+                    {'type': 'DOCUMENT_TEXT_DETECTION', 'maxResults': 1},
+                ]
+            }]
         }
 
+        response = requests.post(
+            f'{VISION_URL}?key={VISION_KEY}',
+            json=payload,
+            timeout=10
+        )
+        data = response.json()
+
+        # Check for API errors
+        if 'error' in data:
+            return {'success': False, 'error': data['error']['message']}
+
+        resp = data.get('responses', [{}])[0]
+
+        if 'error' in resp:
+            return {'success': False, 'error': resp['error']['message']}
+
+        annotations = resp.get('textAnnotations', [])
+        if not annotations:
+            return {'success': False, 'error': 'No text found in image'}
+
+        full_text = annotations[0].get('description', '')
+
+        # Extract serial number
+        code = _extract_serial(full_text, annotations)
+
+        return {
+            'success': True,
+            'code'   : code,
+            'raw'    : full_text,
+        }
+
+    except requests.Timeout:
+        return {'success': False, 'error': 'Vision API timeout — try again'}
     except Exception as e:
         return {'success': False, 'error': str(e)}
 
 
-def _run_tesseract_pil(pil_img) -> str:
-    """Run Tesseract directly on a PIL image — no preprocessing."""
-    configs = [
-        '--psm 6 --oem 1',   # uniform block of text
-        '--psm 7 --oem 1',   # single line
-        '--psm 11 --oem 1',  # sparse text — finds text anywhere
-        '--psm 3 --oem 1',   # fully automatic
-    ]
-    results = []
-    for cfg in configs:
-        try:
-            text = pytesseract.image_to_string(pil_img, config=cfg)
-            results.append(text)
-        except Exception:
-            pass
-    return '\n'.join(results)
-
-
-def _run_tesseract_cv(cv_img) -> str:
-    """Run Tesseract on an OpenCV (numpy) greyscale image."""
-    pil = Image.fromarray(cv_img)
-    return _run_tesseract_pil(pil)
-
-
-def _pick_best_code(raw_text: str) -> str:
+def _extract_serial(full_text: str, annotations: list) -> str:
     """
-    Extract the most likely serial number from raw OCR text.
-    Tries multiple strategies and returns the best match.
+    Extract the serial number from Vision API results.
+    Your codes look like: c20250915364
     """
-    if not raw_text or not raw_text.strip():
-        return ''
-
-    # Strategy 1 — exact pattern match: optional letter + 6+ digits
-    # Matches: c20250915364, 20250915364, C12345678
-    matches = re.findall(r'[a-zA-Z]?\d{6,}', raw_text)
+    # Strategy 1 — match exact pattern: optional letter + 6+ digits
+    matches = re.findall(r'[a-zA-Z]?\d{6,}', full_text)
     if matches:
         return max(matches, key=len)
 
-    # Strategy 2 — score all tokens by digit density
-    tokens = [
-        re.sub(r'[^a-zA-Z0-9]', '', t)
-        for t in re.split(r'\s+', raw_text)
+    # Strategy 2 — score each word by digit density
+    words = [
+        a.get('description', '').strip()
+        for a in annotations[1:]  # skip index 0 = full text
     ]
-    tokens = [t for t in tokens if len(t) >= 4]
+    words = [re.sub(r'[^a-zA-Z0-9]', '', w) for w in words]
+    words = [w for w in words if len(w) >= 4]
 
-    if tokens:
-        best = max(tokens, key=_score, default='')
+    if words:
+        best = max(words, key=_score, default='')
         if _score(best) > 20:
             return best
 
-    return ''
+    # Last resort — return cleaned full text
+    return full_text.replace('\n', ' ').strip()[:50]
 
 
 def _score(token: str) -> float:
     if not token:
         return 0
-    digits  = sum(c.isdigit() for c in token)
+    digits = sum(c.isdigit() for c in token)
     if digits < 3:
         return 0
     return (digits / len(token)) * 100 + min(len(token), 15)

@@ -1,11 +1,9 @@
 django>=4.2,<5.0
 pillow>=10.0
-pytesseract>=0.3.10
 gspread>=5.12
 google-auth>=2.23
-opencv-python-headless>=4.8
-numpy>=1.24
 gunicorn>=21.2
 django-cors-headers>=4.3
 python-dotenv>=1.0
 whitenoise>=6.6
+requests>=2.31

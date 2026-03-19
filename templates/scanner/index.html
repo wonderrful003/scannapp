@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>Scann App</title>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -18,7 +18,7 @@
       background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
       background-size: 40px 40px; opacity: 0.4; pointer-events: none; z-index: 0;
     }
-    .app { position: relative; z-index: 1; max-width: 420px; margin: 0 auto; min-height: 100vh; padding: 24px 16px 40px; display: flex; flex-direction: column; gap: 20px; }
+    .app { position: relative; z-index: 1; max-width: 420px; margin: 0 auto; min-height: 100vh; padding: 20px 16px 40px; display: flex; flex-direction: column; gap: 16px; }
 
     header { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
     .logo { font-family: 'Space Mono', monospace; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.08em; color: var(--accent); text-transform: uppercase; }
@@ -27,34 +27,54 @@
     .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-    .card-head { padding: 14px 18px; border-bottom: 1px solid var(--border); font-size: 0.72rem; font-family: 'Space Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+    /* CAMERA */
+    .camera-card { background: #000; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; position: relative; }
+    #video { width: 100%; height: 260px; object-fit: cover; display: block; }
 
-    .preview-wrap { width: 100%; background: #000; min-height: 180px; display: flex; align-items: center; justify-content: center; }
-    #preview { width: 100%; max-height: 260px; object-fit: contain; display: none; }
-    .placeholder { display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--muted); font-family: 'Space Mono', monospace; font-size: 0.75rem; padding: 36px 20px; text-align: center; }
-    .placeholder svg { opacity: 0.3; }
+    /* Scan overlay */
+    .scan-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+    .scan-box { width: 80%; height: 90px; position: relative; }
+    .scan-box::before, .scan-box::after,
+    .scan-box span::before, .scan-box span::after {
+      content: ''; position: absolute; width: 22px; height: 22px;
+      border-color: var(--accent); border-style: solid;
+    }
+    .scan-box::before  { top:0; left:0;   border-width:3px 0 0 3px; border-radius:4px 0 0 0; }
+    .scan-box::after   { top:0; right:0;  border-width:3px 3px 0 0; border-radius:0 4px 0 0; }
+    .scan-box span::before { bottom:0; left:0;  border-width:0 0 3px 3px; border-radius:0 0 0 4px; }
+    .scan-box span::after  { bottom:0; right:0; border-width:0 3px 3px 0; border-radius:0 0 4px 0; }
+    .scan-line { position: absolute; left:5%; right:5%; height:2px; background: linear-gradient(90deg,transparent,var(--accent),transparent); animation: scanline 1.8s ease-in-out infinite; }
+    @keyframes scanline { 0%{top:5%;opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{top:95%;opacity:0} }
 
-    .progress-wrap { height: 3px; background: var(--border); display: none; }
-    .progress-bar  { height: 100%; background: var(--accent2); width: 0%; transition: width 0.4s; animation: progani 2s ease-in-out infinite; }
-    @keyframes progani { 0%{width:0%} 50%{width:80%} 100%{width:95%} }
+    /* Countdown ring */
+    .countdown-wrap { margin-top: 14px; display: flex; align-items: center; justify-content: center; }
+    .countdown-ring { position: relative; width: 44px; height: 44px; }
+    .countdown-ring svg { transform: rotate(-90deg); }
+    .ring-bg   { fill: none; stroke: var(--border); stroke-width: 3; }
+    .ring-fill { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 113; stroke-dashoffset: 113; transition: stroke-dashoffset 0.1s linear; }
+    .countdown-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: 0.9rem; font-weight: 700; color: var(--accent); }
 
-    .status-bar { padding: 12px 18px; font-size: 0.75rem; font-family: 'Space Mono', monospace; color: var(--muted); display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--border); min-height: 44px; }
+    /* Green flash on success */
+    .flash { position: absolute; inset: 0; background: var(--accent); opacity: 0; pointer-events: none; transition: opacity 0.1s; border-radius: var(--radius); }
+    .flash.show { opacity: 0.25; }
+
+    /* Status */
+    .status-bar { padding: 12px 18px; font-size: 0.75rem; font-family: 'Space Mono', monospace; color: var(--muted); display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--border); min-height: 44px; background: var(--surface); }
     .status-bar.active { color: var(--accent2); }
     .status-bar.ok     { color: var(--accent); }
     .status-bar.bad    { color: var(--warn); }
     .spinner { width: 13px; height: 13px; border: 2px solid var(--border); border-top-color: var(--accent2); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
     @keyframes spin { to{transform:rotate(360deg)} }
 
-    .btn-row { padding: 14px 18px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
-    .btn { flex: 1; padding: 13px; border: none; border-radius: 10px; font-family: 'Space Mono', monospace; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.05em; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
-    .btn:active   { transform: scale(0.97); }
-    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
-    .btn-blue  { background: var(--accent2); color: #fff; }
+    /* Toggle scan button */
+    .btn-row { display: flex; gap: 10px; }
+    .btn { flex: 1; padding: 13px; border: none; border-radius: 10px; font-family: 'Space Mono', monospace; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
+    .btn:active { transform: scale(0.97); }
     .btn-green { background: var(--accent);  color: #0a0c10; }
+    .btn-red   { background: var(--warn);    color: #fff; }
+    .btn-blue  { background: var(--accent2); color: #fff; }
 
-    #fileCamera { display: none; }
-
+    /* Result */
     .result-card { background: var(--surface); border: 2px solid var(--accent); border-radius: var(--radius); overflow: hidden; display: none; }
     .result-card.show { display: block; animation: slideIn 0.3s ease; }
     @keyframes slideIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:none} }
@@ -62,27 +82,28 @@
     .result-text { padding: 16px 18px 4px; font-family: 'Space Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--accent); word-break: break-all; }
     .result-sub  { padding: 4px 18px 14px; font-size: 0.72rem; color: var(--muted); font-family: 'Space Mono', monospace; }
     .edit-row { padding: 0 18px 16px; display: flex; gap: 10px; }
-    .edit-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 0.9rem; padding: 11px 14px; outline: none; transition: border-color 0.2s; }
+    .edit-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 0.9rem; padding: 11px 14px; outline: none; }
     .edit-input:focus { border-color: var(--accent2); }
     .save-btn { background: var(--accent); color: #0a0c10; border: none; border-radius: 10px; padding: 11px 22px; font-family: 'Space Mono', monospace; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
 
+    /* Manual */
     .manual-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
     .lbl { font-size: 0.7rem; font-family: 'Space Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
     .manual-row { display: flex; gap: 10px; }
-    .manual-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 0.85rem; padding: 11px 14px; outline: none; transition: border-color 0.2s; }
+    .manual-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 0.85rem; padding: 11px 14px; outline: none; }
     .manual-input:focus { border-color: var(--accent2); }
     .manual-input::placeholder { color: var(--muted); }
-    .send-btn { background: var(--accent2); color: #fff; border: none; border-radius: 10px; padding: 11px 18px; font-family: 'Space Mono', monospace; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
 
+    /* Log */
     .log-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-    .log-head { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .log-head { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
     .log-title { font-size: 0.7rem; font-family: 'Space Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
     .log-count { font-size: 0.7rem; font-family: 'Space Mono', monospace; color: var(--accent); }
-    .log-list  { padding: 8px 0; max-height: 220px; overflow-y: auto; }
+    .log-list  { padding: 8px 0; max-height: 200px; overflow-y: auto; }
     .log-empty { padding: 24px 18px; text-align: center; color: var(--muted); font-size: 0.8rem; font-family: 'Space Mono', monospace; }
     .log-item  { padding: 10px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); animation: fadeIn 0.3s ease; }
     .log-item:last-child { border-bottom: none; }
-    @keyframes fadeIn { from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:none} }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(-5px)} to{opacity:1} }
     .log-icon  { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.75rem; }
     .log-icon.ok  { background: rgba(0,229,160,0.12); color: var(--accent); }
     .log-icon.err { background: rgba(255,76,76,0.12);  color: var(--warn); }
@@ -103,49 +124,57 @@
 
   <header>
     <div class="logo">Scann<span>App</span></div>
-    <div class="pill"><div class="dot"></div>DJANGO OCR</div>
+    <div class="pill"><div class="dot"></div>AI MODE</div>
   </header>
 
-  <div class="card">
-    <div class="card-head">Take photo → Read Text → Save to Sheets</div>
-    <div class="preview-wrap">
-      <img id="preview" alt="preview" />
-      <div class="placeholder" id="placeholder">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-          <circle cx="12" cy="13" r="4"/>
-        </svg>
-        Tap TAKE PHOTO below
+  <!-- Live camera card -->
+  <div class="camera-card">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="canvas" style="display:none"></canvas>
+    <div class="flash" id="flash"></div>
+    <div class="scan-overlay">
+      <div class="scan-box"><span></span><div class="scan-line"></div></div>
+      <div class="countdown-wrap">
+        <div class="countdown-ring">
+          <svg width="44" height="44" viewBox="0 0 44 44">
+            <circle class="ring-bg"   cx="22" cy="22" r="18"/>
+            <circle class="ring-fill" id="ringFill" cx="22" cy="22" r="18"/>
+          </svg>
+          <div class="countdown-num" id="countdownNum">2</div>
+        </div>
       </div>
     </div>
-    <div class="progress-wrap" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
-    <div class="status-bar" id="statusBar">Ready — tap Take Photo</div>
-    <div class="btn-row">
-      <button class="btn btn-blue"  id="btnTake" onclick="document.getElementById('fileCamera').click()">TAKE PHOTO</button>
-      <button class="btn btn-green" id="btnRead" onclick="readText()" disabled>READ TEXT</button>
+    <div class="status-bar" id="statusBar">Starting camera…</div>
+    <div style="padding:14px 18px; border-top:1px solid var(--border); background:var(--surface);">
+      <div class="btn-row">
+        <button class="btn btn-red"  id="btnStop"  onclick="stopScan()"  style="display:none">STOP</button>
+        <button class="btn btn-green" id="btnStart" onclick="startScan()">START SCANNING</button>
+        <button class="btn btn-blue"  id="btnManual" onclick="document.getElementById('manualInput').focus()">MANUAL</button>
+      </div>
     </div>
   </div>
 
-  <input type="file" id="fileCamera" accept="image/*" capture="environment" onchange="photoSelected(event)" />
-
+  <!-- Result card -->
   <div class="result-card" id="resultCard">
-    <div class="result-head">✓ Text detected — confirm &amp; save</div>
+    <div class="result-head">✓ Code detected — confirm &amp; save</div>
     <div class="result-text" id="resultText"></div>
-    <div class="result-sub">Edit if any character looks wrong</div>
+    <div class="result-sub">Edit if wrong then tap SAVE</div>
     <div class="edit-row">
-      <input class="edit-input" id="editInput" type="text" />
+      <input class="edit-input" id="editInput" type="text"/>
       <button class="save-btn" onclick="saveCode()">SAVE</button>
     </div>
   </div>
 
+  <!-- Manual -->
   <div class="manual-card">
     <div class="lbl">Manual Entry</div>
     <div class="manual-row">
-      <input class="manual-input" type="text" id="manualInput" placeholder="Type code manually…" />
-      <button class="send-btn" onclick="submitManual()">SEND</button>
+      <input class="manual-input" type="text" id="manualInput" placeholder="Type code manually…"/>
+      <button class="btn btn-blue" style="flex:0;padding:11px 18px" onclick="submitManual()">SEND</button>
     </div>
   </div>
 
+  <!-- Log -->
   <div class="log-card">
     <div class="log-head">
       <div class="log-title">Session Log</div>
@@ -159,99 +188,154 @@
 
 <script>
   // ── CONFIG ────────────────────────────────────────────────────────────────
-  // Change this to your deployed Django server URL
-  // Local dev:    http://127.0.0.1:8000
-  // Production:   https://your-server.com
- const BACKEND = 'https://scannapp-production.up.railway.app';;
+  const BACKEND     = 'https://YOUR-RAILWAY-URL.up.railway.app';
+  const SCAN_EVERY  = 2000;   // capture every 2 seconds
+  const COOLDOWN    = 4000;   // after a successful scan wait 4s before next
   // ─────────────────────────────────────────────────────────────────────────
 
-  let currentFile = null;
-  let scanCount   = 0;
+  let scanInterval  = null;
+  let isProcessing  = false;
+  let lastCode      = '';
+  let lastScanTime  = 0;
+  let scanCount     = 0;
+  let countdown     = 0;
+  let countInterval = null;
 
-  // ── Photo selected ────────────────────────────────────────────────────────
-  function photoSelected(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    currentFile = file;
+  const video  = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
 
-    const preview = document.getElementById('preview');
-    preview.src   = URL.createObjectURL(file);
-    preview.style.display = 'block';
-    document.getElementById('placeholder').style.display = 'none';
-    document.getElementById('btnRead').disabled = false;
-    setStatus('Photo ready — tap Read Text', 'ok');
-    document.getElementById('resultCard').classList.remove('show');
-    e.target.value = '';
+  // Start camera on page load
+  window.addEventListener('load', initCamera);
+
+  async function initCamera() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      video.srcObject = stream;
+      setStatus('Camera ready — tap START SCANNING');
+    } catch (err) {
+      setStatus('Camera error: ' + err.message, 'bad');
+    }
   }
 
-  // ── Send to Django backend for OCR ────────────────────────────────────────
-  async function readText() {
-    if (!currentFile) { showToast('Take a photo first', 'info'); return; }
+  // ── Start / Stop scanning ─────────────────────────────────────────────────
+  function startScan() {
+    document.getElementById('btnStart').style.display = 'none';
+    document.getElementById('btnStop').style.display  = 'flex';
+    setStatus('Scanning — point at label…', 'active');
+    startCountdown();
+    scanInterval = setInterval(captureAndSend, SCAN_EVERY);
+  }
 
-    const btnRead = document.getElementById('btnRead');
-    const btnTake = document.getElementById('btnTake');
-    btnRead.disabled = btnTake.disabled = true;
-    btnRead.textContent = 'READING…';
-    showProgress(true);
-    setStatus('Sending to Django OCR server…', 'active');
+  function stopScan() {
+    clearInterval(scanInterval);
+    clearInterval(countInterval);
+    scanInterval = null;
+    document.getElementById('btnStart').style.display = 'flex';
+    document.getElementById('btnStop').style.display  = 'none';
+    document.getElementById('ringFill').style.strokeDashoffset = 113;
+    document.getElementById('countdownNum').textContent = '2';
+    setStatus('Stopped — tap START SCANNING to resume');
+  }
+
+  // ── Countdown ring ────────────────────────────────────────────────────────
+  function startCountdown() {
+    clearInterval(countInterval);
+    countdown = SCAN_EVERY;
+    const ring = document.getElementById('ringFill');
+    const num  = document.getElementById('countdownNum');
+    const circumference = 113;
+
+    countInterval = setInterval(() => {
+      countdown -= 100;
+      if (countdown < 0) countdown = SCAN_EVERY;
+      const progress = countdown / SCAN_EVERY;
+      ring.style.strokeDashoffset = circumference * progress;
+      num.textContent = (countdown / 1000).toFixed(1);
+    }, 100);
+  }
+
+  // ── Capture frame and send to Django ─────────────────────────────────────
+  async function captureAndSend() {
+    if (isProcessing) return;
+
+    // Don't scan again too soon after a successful read
+    if (Date.now() - lastScanTime < COOLDOWN) return;
+
+    isProcessing = true;
+    setStatus('Reading…', 'active');
 
     try {
-      // Send as multipart/form-data — image file included
-      const formData = new FormData();
-      formData.append('image', currentFile);
+      // Capture current video frame
+      canvas.width  = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
 
-      const response = await fetch(BACKEND + '/api/scan/', {
-        method: 'POST',
-        body  : formData,
-        // No Content-Type header — browser sets it with boundary automatically
-      });
+      // Convert to blob and send
+      canvas.toBlob(async (blob) => {
+        try {
+          const formData = new FormData();
+          formData.append('image', blob, 'frame.jpg');
 
-      const data = await response.json();
-      console.log('Backend response:', data);
+          const response = await fetch(BACKEND + '/api/scan/', {
+            method: 'POST',
+            body  : formData,
+          });
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Server error ' + response.status);
-      }
+          const data = await response.json();
 
-      setStatus('✓ Found: ' + data.code, 'ok');
-      showResult(data.code);
-
-      // Already saved by backend — just log it
-      if (data.saved) {
-        addLog(data.code, true);
-        showToast('✓ Saved to Sheets: ' + data.code, 'success');
-      } else {
-        // OCR worked but Sheets write failed — show result for manual save
-        addLog(data.code, false);
-        showToast('Read OK but Sheets error: ' + (data.sheet_error || '?'), 'error');
-      }
-
-      if (navigator.vibrate) navigator.vibrate(100);
+          if (data.success && data.code && data.code.length >= 4) {
+            // Valid code found
+            lastScanTime = Date.now();
+            onCodeFound(data.code, data.saved);
+          } else {
+            setStatus('Scanning — point at label…', 'active');
+          }
+        } catch (err) {
+          setStatus('Scanning — point at label…', 'active');
+        }
+        isProcessing = false;
+      }, 'image/jpeg', 0.85);
 
     } catch (err) {
-      console.error('Backend error:', err);
-      setStatus('Error: ' + err.message, 'bad');
-      showToast('Error: ' + err.message, 'error');
+      isProcessing = false;
+      setStatus('Scanning — point at label…', 'active');
     }
-
-    showProgress(false);
-    btnRead.disabled = btnTake.disabled = false;
-    btnRead.textContent = 'READ TEXT';
   }
 
-  // ── Result card (edit + re-save if needed) ────────────────────────────────
+  // ── Code found ────────────────────────────────────────────────────────────
+  function onCodeFound(code, alreadySaved) {
+    // Vibrate
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+    // Green flash
+    const flash = document.getElementById('flash');
+    flash.classList.add('show');
+    setTimeout(() => flash.classList.remove('show'), 400);
+
+    setStatus('✓ Found: ' + code, 'ok');
+    showResult(code);
+
+    if (alreadySaved) {
+      addLog(code, true);
+      showToast('✓ Saved: ' + code, 'success');
+    }
+  }
+
+  // ── Result card ───────────────────────────────────────────────────────────
   function showResult(code) {
-    document.getElementById('resultText').textContent = code || '(nothing detected)';
+    document.getElementById('resultText').textContent = code;
     document.getElementById('editInput').value = code;
     const card = document.getElementById('resultCard');
     card.classList.add('show');
-    setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 120);
+    setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
   }
 
-  async function saveCode() {
+  function saveCode() {
     const val = document.getElementById('editInput').value.trim();
     if (!val) { showToast('Code is empty', 'info'); return; }
-    await sendManual(val);
+    sendManual(val);
     document.getElementById('resultCard').classList.remove('show');
   }
 
@@ -289,9 +373,6 @@
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
-  function showProgress(on) {
-    document.getElementById('progressWrap').style.display = on ? 'block' : 'none';
-  }
   function setStatus(msg, type = '') {
     const el = document.getElementById('statusBar');
     el.className = 'status-bar ' + type;
