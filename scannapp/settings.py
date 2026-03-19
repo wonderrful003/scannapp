@@ -1,6 +1,3 @@
-"""
-ScannApp Django Settings
-"""
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -9,10 +6,8 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'change-this-in-production-use-env-file')
-
-DEBUG = os.getenv('DEBUG', 'True') == 'True'
-
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'change-this-in-production')
+DEBUG      = os.getenv('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
 INSTALLED_APPS = [
@@ -24,7 +19,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # add this line
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'scannapp.urls'
@@ -39,32 +34,28 @@ TEMPLATES = [{
 }]
 
 WSGI_APPLICATION = 'scannapp.wsgi.application'
-
-# No database needed — Google Sheets is our storage
 DATABASES = {}
 
 STATIC_URL  = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# ── CORS — allow your GitHub Pages frontend ──────────────────────────────────
-# Add your GitHub Pages URL here, e.g. https://yourname.github.io
-CORS_ALLOWED_ORIGINS = os.getenv(
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# CORS — allow all origins (tighten in production)
+CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL', 'True') == 'True'
+CORS_ALLOWED_ORIGINS   = os.getenv(
     'CORS_ALLOWED_ORIGINS',
     'http://localhost:8000,http://127.0.0.1:8000'
 ).split(',')
 
-# During development allow all origins (set to False in production)
-CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL', 'True') == 'True'
-
-# ── Google Sheets config ──────────────────────────────────────────────────────
-GOOGLE_SHEET_ID           = os.getenv('GOOGLE_SHEET_ID', '')
+# Google Sheets
+GOOGLE_SHEET_ID             = os.getenv('GOOGLE_SHEET_ID', '')
 GOOGLE_SERVICE_ACCOUNT_FILE = os.getenv(
     'GOOGLE_SERVICE_ACCOUNT_FILE',
     str(BASE_DIR / 'service_account.json')
 )
 
-# ── OCR config ────────────────────────────────────────────────────────────────
-# On Linux/Ubuntu: sudo apt install tesseract-ocr
-# On Windows: set this to your tesseract.exe path
+# Google Vision API
 VISION_API_KEY = os.getenv('VISION_API_KEY', '')
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

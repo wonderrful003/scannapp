@@ -15,11 +15,17 @@
     html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
     body::before {
       content: ''; position: fixed; inset: 0;
-      background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-image: linear-gradient(var(--border) 1px, transparent 1px),
+                        linear-gradient(90deg, var(--border) 1px, transparent 1px);
       background-size: 40px 40px; opacity: 0.4; pointer-events: none; z-index: 0;
     }
-    .app { position: relative; z-index: 1; max-width: 420px; margin: 0 auto; min-height: 100vh; padding: 20px 16px 40px; display: flex; flex-direction: column; gap: 16px; }
+    .app {
+      position: relative; z-index: 1; max-width: 420px; margin: 0 auto;
+      min-height: 100vh; padding: 20px 16px 40px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
 
+    /* HEADER */
     header { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
     .logo { font-family: 'Space Mono', monospace; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.08em; color: var(--accent); text-transform: uppercase; }
     .logo span { color: var(--text); }
@@ -27,13 +33,13 @@
     .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-    /* CAMERA */
+    /* CAMERA CARD */
     .camera-card { background: #000; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; position: relative; }
     #video { width: 100%; height: 260px; object-fit: cover; display: block; }
 
     /* Scan overlay */
     .scan-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
-    .scan-box { width: 80%; height: 90px; position: relative; }
+    .scan-box { width: 82%; height: 88px; position: relative; }
     .scan-box::before, .scan-box::after,
     .scan-box span::before, .scan-box span::after {
       content: ''; position: absolute; width: 22px; height: 22px;
@@ -43,76 +49,84 @@
     .scan-box::after   { top:0; right:0;  border-width:3px 3px 0 0; border-radius:0 4px 0 0; }
     .scan-box span::before { bottom:0; left:0;  border-width:0 0 3px 3px; border-radius:0 0 0 4px; }
     .scan-box span::after  { bottom:0; right:0; border-width:0 3px 3px 0; border-radius:0 0 4px 0; }
-    .scan-line { position: absolute; left:5%; right:5%; height:2px; background: linear-gradient(90deg,transparent,var(--accent),transparent); animation: scanline 1.8s ease-in-out infinite; }
+    .scan-line {
+      position: absolute; left:4%; right:4%; height:2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      animation: scanline 1.8s ease-in-out infinite;
+    }
     @keyframes scanline { 0%{top:5%;opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{top:95%;opacity:0} }
+    .scan-box.paused .scan-line { animation-play-state: paused; opacity: 0.3; }
 
     /* Countdown ring */
-    .countdown-wrap { margin-top: 14px; display: flex; align-items: center; justify-content: center; }
+    .countdown-wrap { margin-top: 12px; }
     .countdown-ring { position: relative; width: 44px; height: 44px; }
     .countdown-ring svg { transform: rotate(-90deg); }
     .ring-bg   { fill: none; stroke: var(--border); stroke-width: 3; }
     .ring-fill { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 113; stroke-dashoffset: 113; transition: stroke-dashoffset 0.1s linear; }
-    .countdown-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: 0.9rem; font-weight: 700; color: var(--accent); }
+    .countdown-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: 0.85rem; font-weight: 700; color: var(--accent); }
 
-    /* Green flash on success */
-    .flash { position: absolute; inset: 0; background: var(--accent); opacity: 0; pointer-events: none; transition: opacity 0.1s; border-radius: var(--radius); }
-    .flash.show { opacity: 0.25; }
+    /* Green flash */
+    .flash { position: absolute; inset: 0; background: var(--accent); opacity: 0; pointer-events: none; transition: opacity 0.08s; }
+    .flash.show { opacity: 0.3; }
 
-    /* Status */
-    .status-bar { padding: 12px 18px; font-size: 0.75rem; font-family: 'Space Mono', monospace; color: var(--muted); display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--border); min-height: 44px; background: var(--surface); }
+    /* Status bar */
+    .status-bar { padding: 11px 16px; font-size: 0.74rem; font-family: 'Space Mono', monospace; color: var(--muted); display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--border); background: var(--surface); min-height: 42px; }
     .status-bar.active { color: var(--accent2); }
     .status-bar.ok     { color: var(--accent); }
     .status-bar.bad    { color: var(--warn); }
-    .spinner { width: 13px; height: 13px; border: 2px solid var(--border); border-top-color: var(--accent2); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+    .spinner { width: 12px; height: 12px; border: 2px solid var(--border); border-top-color: var(--accent2); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
     @keyframes spin { to{transform:rotate(360deg)} }
 
-    /* Toggle scan button */
-    .btn-row { display: flex; gap: 10px; }
-    .btn { flex: 1; padding: 13px; border: none; border-radius: 10px; font-family: 'Space Mono', monospace; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
-    .btn:active { transform: scale(0.97); }
+    /* Buttons */
+    .btn-row { padding: 12px 16px; border-top: 1px solid var(--border); background: var(--surface); display: flex; gap: 10px; }
+    .btn { flex: 1; padding: 12px 8px; border: none; border-radius: 10px; font-family: 'Space Mono', monospace; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s, transform 0.1s; letter-spacing: 0.04em; }
+    .btn:active   { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
     .btn-green { background: var(--accent);  color: #0a0c10; }
     .btn-red   { background: var(--warn);    color: #fff; }
     .btn-blue  { background: var(--accent2); color: #fff; }
 
-    /* Result */
+    /* Result card */
     .result-card { background: var(--surface); border: 2px solid var(--accent); border-radius: var(--radius); overflow: hidden; display: none; }
     .result-card.show { display: block; animation: slideIn 0.3s ease; }
     @keyframes slideIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:none} }
-    .result-head { padding: 12px 18px; background: rgba(0,229,160,0.07); border-bottom: 1px solid var(--border); font-size: 0.7rem; font-family: 'Space Mono', monospace; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; }
-    .result-text { padding: 16px 18px 4px; font-family: 'Space Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--accent); word-break: break-all; }
-    .result-sub  { padding: 4px 18px 14px; font-size: 0.72rem; color: var(--muted); font-family: 'Space Mono', monospace; }
-    .edit-row { padding: 0 18px 16px; display: flex; gap: 10px; }
-    .edit-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 0.9rem; padding: 11px 14px; outline: none; }
+    .result-head { padding: 11px 16px; background: rgba(0,229,160,0.07); border-bottom: 1px solid var(--border); font-size: 0.7rem; font-family: 'Space Mono', monospace; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; }
+    .result-text { padding: 14px 16px 4px; font-family: 'Space Mono', monospace; font-size: 1.4rem; font-weight: 700; color: var(--accent); word-break: break-all; }
+    .result-sub  { padding: 4px 16px 12px; font-size: 0.7rem; color: var(--muted); font-family: 'Space Mono', monospace; }
+    .edit-row { padding: 0 16px 14px; display: flex; gap: 10px; }
+    .edit-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 0.88rem; padding: 10px 13px; outline: none; transition: border-color 0.2s; }
     .edit-input:focus { border-color: var(--accent2); }
-    .save-btn { background: var(--accent); color: #0a0c10; border: none; border-radius: 10px; padding: 11px 22px; font-family: 'Space Mono', monospace; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+    .save-btn { background: var(--accent); color: #0a0c10; border: none; border-radius: 10px; padding: 10px 20px; font-family: 'Space Mono', monospace; font-size: 0.8rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .save-btn:hover { opacity: 0.85; }
 
     /* Manual */
-    .manual-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
-    .lbl { font-size: 0.7rem; font-family: 'Space Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+    .manual-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+    .lbl { font-size: 0.68rem; font-family: 'Space Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
     .manual-row { display: flex; gap: 10px; }
-    .manual-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 0.85rem; padding: 11px 14px; outline: none; }
+    .manual-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 0.84rem; padding: 10px 13px; outline: none; transition: border-color 0.2s; }
     .manual-input:focus { border-color: var(--accent2); }
     .manual-input::placeholder { color: var(--muted); }
 
     /* Log */
     .log-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-    .log-head { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
-    .log-title { font-size: 0.7rem; font-family: 'Space Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
-    .log-count { font-size: 0.7rem; font-family: 'Space Mono', monospace; color: var(--accent); }
-    .log-list  { padding: 8px 0; max-height: 200px; overflow-y: auto; }
-    .log-empty { padding: 24px 18px; text-align: center; color: var(--muted); font-size: 0.8rem; font-family: 'Space Mono', monospace; }
-    .log-item  { padding: 10px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); animation: fadeIn 0.3s ease; }
+    .log-head  { padding: 13px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .log-title { font-size: 0.68rem; font-family: 'Space Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+    .log-count { font-size: 0.68rem; font-family: 'Space Mono', monospace; color: var(--accent); }
+    .log-list  { padding: 6px 0; max-height: 200px; overflow-y: auto; }
+    .log-empty { padding: 22px 16px; text-align: center; color: var(--muted); font-size: 0.78rem; font-family: 'Space Mono', monospace; }
+    .log-item  { padding: 9px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); animation: fadeIn 0.3s ease; }
     .log-item:last-child { border-bottom: none; }
-    @keyframes fadeIn { from{opacity:0;transform:translateY(-5px)} to{opacity:1} }
-    .log-icon  { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.75rem; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1} }
+    .log-icon  { width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.72rem; }
     .log-icon.ok  { background: rgba(0,229,160,0.12); color: var(--accent); }
     .log-icon.err { background: rgba(255,76,76,0.12);  color: var(--warn); }
-    .log-code { flex: 1; font-family: 'Space Mono', monospace; font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .log-time { font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--muted); white-space: nowrap; }
-    .log-list::-webkit-scrollbar { width: 4px; }
-    .log-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .log-code { flex: 1; font-family: 'Space Mono', monospace; font-size: 0.78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .log-time { font-family: 'Space Mono', monospace; font-size: 0.62rem; color: var(--muted); white-space: nowrap; }
+    .log-list::-webkit-scrollbar { width: 3px; }
+    .log-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-90px); z-index: 200; background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 10px 22px; font-size: 0.82rem; font-family: 'Space Mono', monospace; white-space: nowrap; transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1); max-width: 90vw; text-align: center; }
+    /* Toast */
+    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-90px); z-index: 200; background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 10px 22px; font-size: 0.8rem; font-family: 'Space Mono', monospace; white-space: nowrap; transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1); max-width: 90vw; text-align: center; }
     .toast.show    { transform: translateX(-50%) translateY(0); }
     .toast.success { border-color: var(--accent); color: var(--accent); }
     .toast.error   { border-color: var(--warn);   color: var(--warn); }
@@ -127,50 +141,48 @@
     <div class="pill"><div class="dot"></div>AI MODE</div>
   </header>
 
-  <!-- Live camera card -->
+  <!-- Camera -->
   <div class="camera-card">
     <video id="video" autoplay playsinline muted></video>
     <canvas id="canvas" style="display:none"></canvas>
     <div class="flash" id="flash"></div>
     <div class="scan-overlay">
-      <div class="scan-box"><span></span><div class="scan-line"></div></div>
+      <div class="scan-box" id="scanBox"><span></span><div class="scan-line"></div></div>
       <div class="countdown-wrap">
         <div class="countdown-ring">
           <svg width="44" height="44" viewBox="0 0 44 44">
             <circle class="ring-bg"   cx="22" cy="22" r="18"/>
             <circle class="ring-fill" id="ringFill" cx="22" cy="22" r="18"/>
           </svg>
-          <div class="countdown-num" id="countdownNum">2</div>
+          <div class="countdown-num" id="countdownNum">—</div>
         </div>
       </div>
     </div>
     <div class="status-bar" id="statusBar">Starting camera…</div>
-    <div style="padding:14px 18px; border-top:1px solid var(--border); background:var(--surface);">
-      <div class="btn-row">
-        <button class="btn btn-red"  id="btnStop"  onclick="stopScan()"  style="display:none">STOP</button>
-        <button class="btn btn-green" id="btnStart" onclick="startScan()">START SCANNING</button>
-        <button class="btn btn-blue"  id="btnManual" onclick="document.getElementById('manualInput').focus()">MANUAL</button>
-      </div>
+    <div class="btn-row">
+      <button class="btn btn-green" id="btnStart" onclick="startScan()">START SCANNING</button>
+      <button class="btn btn-red"   id="btnStop"  onclick="stopScan()" style="display:none">STOP</button>
+      <button class="btn btn-blue"  onclick="document.getElementById('manualInput').focus()">MANUAL</button>
     </div>
   </div>
 
-  <!-- Result card -->
+  <!-- Result -->
   <div class="result-card" id="resultCard">
     <div class="result-head">✓ Code detected — confirm &amp; save</div>
     <div class="result-text" id="resultText"></div>
-    <div class="result-sub">Edit if wrong then tap SAVE</div>
+    <div class="result-sub">Edit if any character looks wrong, then tap SAVE</div>
     <div class="edit-row">
       <input class="edit-input" id="editInput" type="text"/>
       <button class="save-btn" onclick="saveCode()">SAVE</button>
     </div>
   </div>
 
-  <!-- Manual -->
+  <!-- Manual entry -->
   <div class="manual-card">
     <div class="lbl">Manual Entry</div>
     <div class="manual-row">
       <input class="manual-input" type="text" id="manualInput" placeholder="Type code manually…"/>
-      <button class="btn btn-blue" style="flex:0;padding:11px 18px" onclick="submitManual()">SEND</button>
+      <button class="btn btn-blue" style="flex:0;padding:10px 16px;border-radius:10px" onclick="submitManual()">SEND</button>
     </div>
   </div>
 
@@ -187,139 +199,161 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  // ── CONFIG ────────────────────────────────────────────────────────────────
-  const BACKEND     = 'https://YOUR-RAILWAY-URL.up.railway.app';
-  const SCAN_EVERY  = 2000;   // capture every 2 seconds
-  const COOLDOWN    = 4000;   // after a successful scan wait 4s before next
+  // ── CONFIG — update BACKEND to your Railway URL ───────────────────────────
+  const BACKEND    = 'https://scannapp-production.up.railway.app';
+  const SCAN_EVERY = 2500;   // ms between auto-captures while scanning
+  const COOLDOWN   = 5000;   // ms to wait after a successful scan before next
   // ─────────────────────────────────────────────────────────────────────────
 
   let scanInterval  = null;
+  let countInterval = null;
   let isProcessing  = false;
-  let lastCode      = '';
   let lastScanTime  = 0;
   let scanCount     = 0;
-  let countdown     = 0;
-  let countInterval = null;
+  let countdown     = SCAN_EVERY;
 
   const video  = document.getElementById('video');
   const canvas = document.getElementById('canvas');
 
-  // Start camera on page load
+  // ── Init camera on load ───────────────────────────────────────────────────
   window.addEventListener('load', initCamera);
 
   async function initCamera() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+        video: {
+          facingMode: 'environment',
+          width : { ideal: 1280 },
+          height: { ideal: 720  },
+        }
       });
       video.srcObject = stream;
-      setStatus('Camera ready — tap START SCANNING');
+      video.onloadedmetadata = () => {
+        setStatus('Camera ready — tap START SCANNING');
+      };
     } catch (err) {
-      setStatus('Camera error: ' + err.message, 'bad');
+      setStatus('Camera error: ' + err.message + ' — use manual entry below', 'bad');
     }
   }
 
-  // ── Start / Stop scanning ─────────────────────────────────────────────────
+  // ── Start scanning ────────────────────────────────────────────────────────
   function startScan() {
     document.getElementById('btnStart').style.display = 'none';
     document.getElementById('btnStop').style.display  = 'flex';
-    setStatus('Scanning — point at label…', 'active');
-    startCountdown();
+    document.getElementById('scanBox').classList.remove('paused');
+    setStatus('Scanning — point label inside the box…', 'active');
+
+    // Reset countdown
+    countdown = SCAN_EVERY;
+    updateRing(1);
+
+    // Countdown ring animation
+    countInterval = setInterval(() => {
+      countdown -= 100;
+      if (countdown <= 0) countdown = SCAN_EVERY;
+      updateRing(countdown / SCAN_EVERY);
+    }, 100);
+
+    // Auto-capture interval
     scanInterval = setInterval(captureAndSend, SCAN_EVERY);
   }
 
+  // ── Stop scanning ─────────────────────────────────────────────────────────
   function stopScan() {
     clearInterval(scanInterval);
     clearInterval(countInterval);
     scanInterval = null;
     document.getElementById('btnStart').style.display = 'flex';
     document.getElementById('btnStop').style.display  = 'none';
+    document.getElementById('scanBox').classList.add('paused');
+    document.getElementById('countdownNum').textContent = '—';
     document.getElementById('ringFill').style.strokeDashoffset = 113;
-    document.getElementById('countdownNum').textContent = '2';
     setStatus('Stopped — tap START SCANNING to resume');
   }
 
-  // ── Countdown ring ────────────────────────────────────────────────────────
-  function startCountdown() {
-    clearInterval(countInterval);
-    countdown = SCAN_EVERY;
-    const ring = document.getElementById('ringFill');
-    const num  = document.getElementById('countdownNum');
+  function updateRing(fraction) {
     const circumference = 113;
-
-    countInterval = setInterval(() => {
-      countdown -= 100;
-      if (countdown < 0) countdown = SCAN_EVERY;
-      const progress = countdown / SCAN_EVERY;
-      ring.style.strokeDashoffset = circumference * progress;
-      num.textContent = (countdown / 1000).toFixed(1);
-    }, 100);
+    document.getElementById('ringFill').style.strokeDashoffset = circumference * (1 - fraction);
+    document.getElementById('countdownNum').textContent = (fraction * SCAN_EVERY / 1000).toFixed(1);
   }
 
-  // ── Capture frame and send to Django ─────────────────────────────────────
+  // ── Capture frame → send to Django → OCR ─────────────────────────────────
   async function captureAndSend() {
     if (isProcessing) return;
 
-    // Don't scan again too soon after a successful read
+    // Cooldown after successful scan
     if (Date.now() - lastScanTime < COOLDOWN) return;
 
+    // Make sure video is actually playing
+    if (!video.videoWidth || !video.videoHeight) return;
+
     isProcessing = true;
-    setStatus('Reading…', 'active');
+    setStatus('Reading label…', 'active');
 
     try {
-      // Capture current video frame
+      // Snapshot the video frame
       canvas.width  = video.videoWidth;
       canvas.height = video.videoHeight;
       canvas.getContext('2d').drawImage(video, 0, 0);
 
-      // Convert to blob and send
+      // Convert canvas to blob and POST to Django
       canvas.toBlob(async (blob) => {
         try {
           const formData = new FormData();
           formData.append('image', blob, 'frame.jpg');
 
-          const response = await fetch(BACKEND + '/api/scan/', {
+          const res  = await fetch(BACKEND + '/api/scan/', {
             method: 'POST',
             body  : formData,
           });
+          const data = await res.json();
 
-          const data = await response.json();
+          console.log('Scan response:', data);
 
           if (data.success && data.code && data.code.length >= 4) {
-            // Valid code found
             lastScanTime = Date.now();
-            onCodeFound(data.code, data.saved);
+            onCodeFound(data.code, data.saved, data.sheet_error);
+          } else if (data.error) {
+            setStatus('Error: ' + data.error, 'bad');
           } else {
-            setStatus('Scanning — point at label…', 'active');
+            setStatus('Scanning — point label inside the box…', 'active');
           }
-        } catch (err) {
-          setStatus('Scanning — point at label…', 'active');
+
+        } catch (fetchErr) {
+          console.error('Fetch error:', fetchErr);
+          setStatus('Network error — is server running?', 'bad');
         }
+
         isProcessing = false;
-      }, 'image/jpeg', 0.85);
+
+      }, 'image/jpeg', 0.88);
 
     } catch (err) {
+      console.error('Capture error:', err);
       isProcessing = false;
-      setStatus('Scanning — point at label…', 'active');
+      setStatus('Scanning — point label inside the box…', 'active');
     }
   }
 
   // ── Code found ────────────────────────────────────────────────────────────
-  function onCodeFound(code, alreadySaved) {
-    // Vibrate
-    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+  function onCodeFound(code, saved, sheetError) {
+    // Vibrate: two short pulses
+    if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
 
     // Green flash
     const flash = document.getElementById('flash');
     flash.classList.add('show');
-    setTimeout(() => flash.classList.remove('show'), 400);
+    setTimeout(() => flash.classList.remove('show'), 350);
 
-    setStatus('✓ Found: ' + code, 'ok');
+    setStatus('✓ ' + code, 'ok');
     showResult(code);
 
-    if (alreadySaved) {
+    if (saved) {
       addLog(code, true);
       showToast('✓ Saved: ' + code, 'success');
+    } else if (sheetError) {
+      addLog(code, false);
+      showToast('Read OK — Sheets error: ' + sheetError, 'error');
     }
   }
 
@@ -353,12 +387,12 @@
 
   async function sendManual(code) {
     try {
-      const response = await fetch(BACKEND + '/api/scan/', {
+      const res  = await fetch(BACKEND + '/api/scan/', {
         method : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body   : JSON.stringify({ code }),
       });
-      const data = await response.json();
+      const data = await res.json();
       if (data.success) {
         addLog(code, true);
         showToast('✓ Saved: ' + code, 'success');
@@ -376,30 +410,38 @@
   function setStatus(msg, type = '') {
     const el = document.getElementById('statusBar');
     el.className = 'status-bar ' + type;
-    el.innerHTML = type === 'active' ? `<div class="spinner"></div>${msg}` : msg;
+    el.innerHTML = type === 'active'
+      ? `<div class="spinner"></div>${msg}`
+      : msg;
   }
+
   let toastTimer;
   function showToast(msg, type = 'info') {
     const t = document.getElementById('toast');
-    t.textContent = msg; t.className = `toast ${type} show`;
+    t.textContent = msg;
+    t.className   = `toast ${type} show`;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
   }
+
   function addLog(code, ok) {
     const list  = document.getElementById('logList');
     const empty = list.querySelector('.log-empty');
     if (empty) empty.remove();
     scanCount++;
-    document.getElementById('logCount').textContent = `${scanCount} scan${scanCount !== 1 ? 's' : ''}`;
-    const ts = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    document.getElementById('logCount').textContent =
+      `${scanCount} scan${scanCount !== 1 ? 's' : ''}`;
+    const ts = new Date().toLocaleTimeString([],
+      { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const item = document.createElement('div');
     item.className = 'log-item';
     item.innerHTML = `
-      <div class="log-icon ${ok?'ok':'err'}">${ok?'✓':'✗'}</div>
+      <div class="log-icon ${ok ? 'ok' : 'err'}">${ok ? '✓' : '✗'}</div>
       <div class="log-code">${esc(code)}</div>
       <div class="log-time">${ts}</div>`;
     list.prepend(item);
   }
+
   function esc(s) {
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }

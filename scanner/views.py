@@ -6,13 +6,13 @@ Two endpoints:
   GET  /api/health/→ health check
 """
 import json
-from django.http      import JsonResponse
-from django.views     import View
+from django.http import JsonResponse
+from django.views import View
 from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators      import method_decorator
+from django.utils.decorators import method_decorator
 from django.shortcuts import render
 
-from .ocr_service    import extract_code
+from .ocr_service import extract_code
 from .sheets_service import append_scan
 
 
@@ -54,8 +54,8 @@ class ScanView(View):
                 result = append_scan(code, raw_text='manual entry')
                 return JsonResponse({
                     'success': True,
-                    'code'   : code,
-                    'saved'  : result['success'],
+                    'code': code,
+                    'saved': result['success'],
                     'sheet_error': result.get('error'),
                 })
             except json.JSONDecodeError:
@@ -95,16 +95,16 @@ class ScanView(View):
                 status=422
             )
 
-        code     = ocr_result['code']
+        code = ocr_result['code']
         raw_text = ocr_result.get('raw', '')
 
         # Write to Google Sheets
         sheet_result = append_scan(code, raw_text)
 
         return JsonResponse({
-            'success'    : True,
-            'code'       : code,
-            'raw'        : raw_text,
-            'saved'      : sheet_result['success'],
+            'success': True,
+            'code': code,
+            'raw': raw_text[:100],  # Truncate for response
+            'saved': sheet_result['success'],
             'sheet_error': sheet_result.get('error'),
         })
